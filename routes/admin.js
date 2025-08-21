@@ -12,5 +12,6 @@ router.post('/adminLogin',admin.adminLogin)
 router.post('/adminAddProduct',authentication,Autho('admin'),upload.array('images', 5),admin.adminAddProduct)
 router.post('/adminAddCategory',authentication,Autho('admin'),admin.AddCategory)
 router.get('/adminGetCategory',authentication,Autho('admin'),admin.GetCategories)
+router.delete('/adminDeleteProduct/:id',authentication,Autho('admin'),admin.DeleteAproduct)
 
 module.exports = router;

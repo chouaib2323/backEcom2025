@@ -38,14 +38,7 @@ res.json({ message: "Login successful", token });
     }
 }
 
-// function queryAsync(sql, params) {
-//   return new Promise((resolve, reject) => {
-//     db.query(sql, params, (err, results) => {
-//       if (err) return reject(err);
-//       resolve(results);
-//     });
-//   });
-// }
+
 
 
 exports.adminAddProduct = async (req, res) => {
@@ -124,3 +117,47 @@ exports.GetCategories = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+
+exports.DeleteAproduct = async (req, res) => {
+  const { id } = req.params; 
+
+  if (!id) {
+    return res.status(400).json({ error: 'Product ID is required' });
+  }
+
+  let connection;
+  try {
+    connection = await db.getConnection();
+    await connection.beginTransaction();
+
+    // Delete photos
+    await connection.query(`DELETE FROM product_photos WHERE product_id = ?`, [id]);
+
+    // Delete colors
+    await connection.query(`DELETE FROM product_colors WHERE product_id = ?`, [id]);
+
+    // Delete variants
+    await connection.query(`DELETE FROM product_variants WHERE product_id = ?`, [id]);
+
+    // Finally delete product
+    const [result] = await connection.query(`DELETE FROM products WHERE id = ?`, [id]);
+
+    if (result.affectedRows === 0) {
+      await connection.rollback();
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    await connection.commit();
+    res.json({ message: ' Product deleted successfully!' });
+
+  } catch (error) {
+    if (connection) await connection.rollback();
+    console.error('Error deleting product:', error);
+    res.status(500).json({ error: ' Failed to delete product.' });
+  } finally {
+    if (connection) connection.release();
+  }
+};
+
+

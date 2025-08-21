@@ -61,3 +61,55 @@ res.json({ message: "Login successful", token });
 
 
 
+exports.GetProducts = async (req, res) => {
+    try {
+        const [rows] = await db.query(`
+            SELECT 
+                p.id,
+                p.name,
+                p.description,
+                p.price,
+                p.category_id,
+                GROUP_CONCAT(DISTINCT pp.image_url) AS images,
+                GROUP_CONCAT(DISTINCT CONCAT(pv.id, ':', pv.sku, ':', pv.stock_quantity )) AS variants,
+                GROUP_CONCAT(DISTINCT pc.color) AS colors
+            FROM products p
+            LEFT JOIN product_photos pp ON p.id = pp.product_id
+            LEFT JOIN product_variants pv ON p.id = pv.product_id
+            LEFT JOIN product_colors pc ON p.id = pc.product_id
+            GROUP BY p.id
+        `);
+
+        const products = rows.map(row => ({
+            id: row.id,
+            name: row.name,
+            description: row.description,
+            price: row.price,
+            category_id: row.category_id,
+            images: row.images ? row.images.split(',') : [],
+            variants: row.variants
+                ? row.variants.split(',').map(v => {
+                    const [id, sku, qty ] = v.split(':');
+                    return { id, sku, stock_quantity: qty  };
+                })
+                : [],
+            colors: row.colors ? row.colors.split(',') : []
+        }));
+
+        res.status(200).json(products);
+    } catch (error) {
+        console.error("GetProducts Error:", error);
+        res.status(500).json({ message: "Server error", error });
+    }
+};
+
+
+exports.GetCategories = async (req, res) => {
+    try {
+      const [categories] = await db.query('SELECT * FROM categories');
+      res.json(categories);
+    } catch (error) {
+      console.error('Error getting categories:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  };

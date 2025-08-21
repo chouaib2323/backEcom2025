@@ -4,7 +4,7 @@ const userRoute= require('./routes/user')
 const adminRoute= require('./routes/admin')
 
 const cookieParser = require('cookie-parser');
-
+const path = require('path');
 
 const app = express();
 
@@ -16,6 +16,7 @@ app.use(cors({
   origin: 'http://localhost:5173', // your frontend origin
   credentials: true                // allow cookies to be sent
 }));
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 // API routes
 app.use('/user',userRoute)
 app.use('/admin',adminRoute)
