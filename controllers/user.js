@@ -113,3 +113,55 @@ exports.GetCategories = async (req, res) => {
       res.status(500).json({ error: 'Internal server error' });
     }
   };
+
+  exports.GetProduct = async (req, res) => {
+    try {
+      const { id } = req.params;   // ✅ correct way to get product id
+      const [rows] = await db.query(
+        `
+        SELECT 
+            p.id,
+            p.name,
+            p.description,
+            p.price,
+            p.category_id,
+            GROUP_CONCAT(DISTINCT pp.image_url) AS images,
+            GROUP_CONCAT(DISTINCT CONCAT(pv.id, ':', pv.sku, ':', pv.stock_quantity )) AS variants,
+            GROUP_CONCAT(DISTINCT pc.color) AS colors
+        FROM products p
+        LEFT JOIN product_photos pp ON p.id = pp.product_id
+        LEFT JOIN product_variants pv ON p.id = pv.product_id
+        LEFT JOIN product_colors pc ON p.id = pc.product_id
+        WHERE p.id = ?
+        GROUP BY p.id
+        `,
+        [id]   // ✅ pass id safely
+      );
+  
+      if (rows.length === 0) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+  
+      const product = {
+        id: rows[0].id,
+        name: rows[0].name,
+        description: rows[0].description,
+        price: rows[0].price,
+        category_id: rows[0].category_id,
+        images: rows[0].images ? rows[0].images.split(",") : [],
+        variants: rows[0].variants
+          ? rows[0].variants.split(",").map((v) => {
+              const [id, sku, qty] = v.split(":");
+              return { id, sku, stock_quantity: qty };
+            })
+          : [],
+        colors: rows[0].colors ? rows[0].colors.split(",") : [],
+      };
+  
+      res.status(200).json(product); // return single product, not array
+    } catch (error) {
+      console.error("GetProduct Error:", error);
+      res.status(500).json({ message: "Server error", error });
+    }
+  };
+  

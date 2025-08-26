@@ -9,5 +9,6 @@ router.post('/register',user.userRegister)
 router.post('/login',user.userLogin)
 router.get('/getproducts',user.GetProducts)
 router.get('/userGetCategory',authentication,Autho('user'),user.GetCategories)
+router.get('/getproduct/:id',user.GetProduct)
 
 module.exports = router;
