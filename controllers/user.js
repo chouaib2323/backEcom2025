@@ -126,7 +126,7 @@ exports.GetCategories = async (req, res) => {
             p.price,
             p.category_id,
             GROUP_CONCAT(DISTINCT pp.image_url) AS images,
-            GROUP_CONCAT(DISTINCT CONCAT(pv.id, ':', pv.sku, ':', pv.stock_quantity )) AS variants,
+            GROUP_CONCAT(DISTINCT CONCAT(pv.id, ':', pv.sku, ':', pv.stock_quantity, ':', pv.color , ':' , pv.size )) AS variants,
             GROUP_CONCAT(DISTINCT pc.color) AS colors
         FROM products p
         LEFT JOIN product_photos pp ON p.id = pp.product_id
@@ -151,8 +151,8 @@ exports.GetCategories = async (req, res) => {
         images: rows[0].images ? rows[0].images.split(",") : [],
         variants: rows[0].variants
           ? rows[0].variants.split(",").map((v) => {
-              const [id, sku, qty] = v.split(":");
-              return { id, sku, stock_quantity: qty };
+              const [id, sku, qty , color , size] = v.split(":");
+              return { id, sku, stock_quantity: qty , color, size};
             })
           : [],
         colors: rows[0].colors ? rows[0].colors.split(",") : [],
@@ -165,3 +165,10 @@ exports.GetCategories = async (req, res) => {
     }
   };
   
+
+
+
+
+
+
+ 
